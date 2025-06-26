@@ -111,7 +111,7 @@ if st.button('Predict Churn', type="primary"):
     # هذا يضمن أن يتم إنشاء نفس الأعمدة التي كانت في بيانات التدريب
     input_df_processed = pd.get_dummies(input_df, columns=[
         'Contract', 'InternetService', 'OnlineSecurity', 'TechSupport', 'PaymentMethod', 'PaperlessBilling'
-        # أضف هنا جميع أسماء الأعمدة الفئوية الأصلية التي قمت بعمل get_dummies لها في التدريب
+        # لا تضع هنا أي تعليقات مثل "أضف هنا..."
     ], drop_first=True)
 
     # ضمان أن جميع الأعمدة المتوقعة موجودة، وتعيين القيم المفقودة إلى 0
