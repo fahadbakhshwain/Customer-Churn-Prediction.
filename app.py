@@ -23,8 +23,38 @@ except FileNotFoundError:
 # ستحتاج للحصول على قائمة الأعمدة النهائية من الـ Notebook الخاص بك
 # بعد تطبيق pd.get_dummies() على البيانات الكاملة.
 # مثال (يجب تعديله ليتناسب مع أعمدتك الحقيقية):
-expected_columns = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 'gender_Male', 'Partner_Yes', 'Dependents_Yes', 'PhoneService_Yes', 'MultipleLines_No phone service', 'MultipleLines_Yes', 'InternetService_Fiber optic', 'InternetService_No', 'OnlineSecurity_No internet service', 'OnlineSecurity_Yes', 'OnlineBackup_No internet service', 'OnlineBackup_Yes', 'DeviceProtection_No internet service', 'DeviceProtection_Yes', 'TechSupport_No internet service', 'TechSupport_Yes', 'StreamingTV_No internet service', 'StreamingTV_Yes', 'StreamingMovies_No internet service', 'StreamingMovies_Yes', 'Contract_One year', 'Contract_Two year', 'PaperlessBilling_Yes', 'PaymentMethod_Credit card (automatic)', 'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check']
-
+expected_columns = [
+    'SeniorCitizen', # هذا أول عنصر
+    'tenure',
+    'MonthlyCharges',
+    'TotalCharges',
+    'gender_Male',
+    'Partner_Yes',
+    'Dependents_Yes',
+    'PhoneService_Yes',
+    'MultipleLines_No phone service',
+    'MultipleLines_Yes',
+    'InternetService_Fiber optic',
+    'InternetService_No',
+    'OnlineSecurity_No internet service',
+    'OnlineSecurity_Yes',
+    'OnlineBackup_No internet service',
+    'OnlineBackup_Yes',
+    'DeviceProtection_No internet service',
+    'DeviceProtection_Yes',
+    'TechSupport_No internet service',
+    'TechSupport_Yes',
+    'StreamingTV_No internet service',
+    'StreamingTV_Yes',
+    'StreamingMovies_No internet service',
+    'StreamingMovies_Yes',
+    'Contract_One year',
+    'Contract_Two year',
+    'PaperlessBilling_Yes',
+    'PaymentMethod_Credit card (automatic)',
+    'PaymentMethod_Electronic check',
+    'PaymentMethod_Mailed check' # هذا آخر عنصر، لا يوجد فاصلة بعده إذا كان هو الأخير قبل القوس ]
+] # تأكد من وجود هذا القوس هنا
 
     # أضف هنا جميع الأعمدة الأخرى التي تم إنشاؤها بواسطة get_dummies
     # لكل الميزات الفئوية التي استخدمتها في تدريب الموديل.
