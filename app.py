@@ -20,11 +20,9 @@ except FileNotFoundError:
 
 # --- Define Expected Columns from Training Data ---
 # هذا الجزء حاسم: يجب أن يتضمن جميع الأعمدة بعد pd.get_dummies على بيانات التدريب
-# ستحتاج للحصول على قائمة الأعمدة النهائية من الـ Notebook الخاص بك
-# بعد تطبيق pd.get_dummies() على البيانات الكاملة.
-# مثال (يجب تعديله ليتناسب مع أعمدتك الحقيقية):
+# يجب أن تكون بنفس الترتيب الذي دخلت به إلى الموديل.
 expected_columns = [
-    'SeniorCitizen', # هذا أول عنصر
+    'SeniorCitizen',
     'tenure',
     'MonthlyCharges',
     'TotalCharges',
@@ -53,12 +51,7 @@ expected_columns = [
     'PaperlessBilling_Yes',
     'PaymentMethod_Credit card (automatic)',
     'PaymentMethod_Electronic check',
-    'PaymentMethod_Mailed check' # هذا آخر عنصر، لا يوجد فاصلة بعده إذا كان هو الأخير قبل القوس ]
-] # تأكد من وجود هذا القوس هنا
-
-    # أضف هنا جميع الأعمدة الأخرى التي تم إنشاؤها بواسطة get_dummies
-    # لكل الميزات الفئوية التي استخدمتها في تدريب الموديل.
-    # يجب أن تكون بنفس الترتيب الذي دخلت به إلى الموديل.
+    'PaymentMethod_Mailed check'
 ]
 
 # --- App Title and Description ---
@@ -111,7 +104,6 @@ if st.button('Predict Churn', type="primary"):
     # هذا يضمن أن يتم إنشاء نفس الأعمدة التي كانت في بيانات التدريب
     input_df_processed = pd.get_dummies(input_df, columns=[
         'Contract', 'InternetService', 'OnlineSecurity', 'TechSupport', 'PaymentMethod', 'PaperlessBilling'
-        # لا تضع هنا أي تعليقات مثل "أضف هنا..."
     ], drop_first=True)
 
     # ضمان أن جميع الأعمدة المتوقعة موجودة، وتعيين القيم المفقودة إلى 0
@@ -145,3 +137,4 @@ if st.button('Predict Churn', type="primary"):
 
     st.write("---")
     st.info("ملاحظة: دقة التنبؤ تعتمد على جودة بيانات التدريب ومدى تطابق أعمدة المدخلات مع أعمدة التدريب الأصلية.")
+
