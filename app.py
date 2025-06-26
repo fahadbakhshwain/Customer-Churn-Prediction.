@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import numpy as np # تأكد من وجود numpy
+from sklearn.ensemble import RandomForestClassifier # تأكد من نوع موديلك
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -9,15 +11,25 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- Load The Preprocessor and Model ---
-# We need to load both the preprocessor (scaler/encoder) and the model
-# For simplicity, we will perform preprocessing directly here.
-# In a real-world scenario, you would save and load a full pipeline.
+# --- Load The Model ---
 try:
     model = joblib.load('models/churn_classifier_model.joblib')
 except FileNotFoundError:
     st.error("Model file not found! Please make sure 'churn_classifier_model.joblib' is in the 'models' folder.")
     st.stop()
+
+# --- Define Expected Columns from Training Data ---
+# هذا الجزء حاسم: يجب أن يتضمن جميع الأعمدة بعد pd.get_dummies على بيانات التدريب
+# ستحتاج للحصول على قائمة الأعمدة النهائية من الـ Notebook الخاص بك
+# بعد تطبيق pd.get_dummies() على البيانات الكاملة.
+# مثال (يجب تعديله ليتناسب مع أعمدتك الحقيقية):
+expected_columns = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'TotalCharges', 'gender_Male', 'Partner_Yes', 'Dependents_Yes', 'PhoneService_Yes', 'MultipleLines_No phone service', 'MultipleLines_Yes', 'InternetService_Fiber optic', 'InternetService_No', 'OnlineSecurity_No internet service', 'OnlineSecurity_Yes', 'OnlineBackup_No internet service', 'OnlineBackup_Yes', 'DeviceProtection_No internet service', 'DeviceProtection_Yes', 'TechSupport_No internet service', 'TechSupport_Yes', 'StreamingTV_No internet service', 'StreamingTV_Yes', 'StreamingMovies_No internet service', 'StreamingMovies_Yes', 'Contract_One year', 'Contract_Two year', 'PaperlessBilling_Yes', 'PaymentMethod_Credit card (automatic)', 'PaymentMethod_Electronic check', 'PaymentMethod_Mailed check']
+
+
+    # أضف هنا جميع الأعمدة الأخرى التي تم إنشاؤها بواسطة get_dummies
+    # لكل الميزات الفئوية التي استخدمتها في تدريب الموديل.
+    # يجب أن تكون بنفس الترتيب الذي دخلت به إلى الموديل.
+]
 
 # --- App Title and Description ---
 st.title('👋 Customer Churn Predictor')
@@ -47,40 +59,59 @@ with col3:
 
 # --- Prediction Logic ---
 if st.button('Predict Churn', type="primary"):
-    
-    # This is a simplified preprocessing step. 
-    # A full implementation would use the saved OneHotEncoder.
-    # For now, we will create a dummy dataframe that roughly matches the training structure.
-    # This part is complex and needs to match your exact preprocessing steps.
-    # The code below is a REPRESENTATION and will likely need adjustment.
-    
-    # Create a dictionary of the input
-    # Note: This is a simplified example. A robust app needs a saved preprocessor.
-    input_dict = {
+    # بناء قاموس من المدخلات الخام
+    input_data = {
         'tenure': tenure,
         'MonthlyCharges': monthly_charges,
         'TotalCharges': total_charges,
-        'Contract_Month-to-month': 1 if contract == 'Month-to-month' else 0,
-        'Contract_One year': 1 if contract == 'One year' else 0,
-        'Contract_Two year': 1 if contract == 'Two year' else 0,
-        'PaymentMethod_Electronic check': 1 if pmt_method == 'Electronic check' else 0,
-        # ... and so on for ALL other one-hot encoded features.
-        # This is complex to do manually.
+        'Contract': contract, # تبقى كنص هنا
+        'InternetService': internet_service, # تبقى كنص هنا
+        'OnlineSecurity': online_security, # تبقى كنص هنا
+        'TechSupport': tech_support, # تبقى كنص هنا
+        'PaymentMethod': pmt_method, # تبقى كنص هنا
+        'PaperlessBilling': paperless_billing # تبقى كنص هنا
+        # أضف هنا أي ميزات أخرى استخدمتها في النموذج
+        # تأكد من أن أسماء المفاتيح هنا تتطابق مع أسماء الأعمدة الأصلية في بياناتك
     }
-    
-    st.warning("Note: The prediction below is illustrative. A full deployment requires a saved preprocessing pipeline to handle categorical data correctly.", icon="⚠️")
 
-    # A placeholder for prediction logic as manual one-hot encoding is complex
-    # In a real app, you would transform the input_dict using a saved preprocessor
-    # and then predict.
-    # For demonstration, we'll just show the inputs.
-    
-    # A simplified prediction based on the most important feature
-    if contract == 'Month-to-month' and tenure < 12:
-        prediction_result = "High Risk of Churn"
-        st.error(prediction_result)
+    # تحويل المدخلات إلى DataFrame
+    input_df = pd.DataFrame([input_data])
+
+    # تطبيق get_dummies على بيانات الإدخال
+    # هذا يضمن أن يتم إنشاء نفس الأعمدة التي كانت في بيانات التدريب
+    input_df_processed = pd.get_dummies(input_df, columns=[
+        'Contract', 'InternetService', 'OnlineSecurity', 'TechSupport', 'PaymentMethod', 'PaperlessBilling'
+        # أضف هنا جميع أسماء الأعمدة الفئوية الأصلية التي قمت بعمل get_dummies لها في التدريب
+    ], drop_first=True)
+
+    # ضمان أن جميع الأعمدة المتوقعة موجودة، وتعيين القيم المفقودة إلى 0
+    # هذا حاسم جداً لـ get_dummies، حيث قد لا تظهر كل الفئات في إدخال واحد
+    # مثال: إذا لم يختار المستخدم 'Fiber optic'، فإن 'InternetService_Fiber optic' لن تنشأ
+    # يجب أن نضمن أنها موجودة في الـ DataFrame بـ 0
+    final_input_df = pd.DataFrame(columns=expected_columns)
+    final_input_df = pd.concat([final_input_df, input_df_processed], ignore_index=True)
+    final_input_df = final_input_df.fillna(0) # املأ القيم المفقودة بـ 0
+    final_input_df = final_input_df.astype(float) # تأكد أن الأعمدة كلها أرقام
+
+    # إعادة ترتيب الأعمدة لتطابق ترتيب أعمدة التدريب بالضبط
+    # (هذه خطوة حاسمة جداً لعمل النموذج بشكل صحيح)
+    # تأكد أن 'expected_columns' (المذكورة في بداية الكود) هي بالترتيب الصحيح.
+    final_input_df = final_input_df[expected_columns]
+
+
+    # إجراء التنبؤ باستخدام النموذج المدرب
+    churn_prediction = model.predict(final_input_df)
+    churn_proba = model.predict_proba(final_input_df)[:, 1] # احتمالية التذبذب
+
+    st.write("---")
+    st.subheader("نتيجة التنبؤ:")
+
+    if churn_prediction[0] == 1:
+        st.error(f"⚠️ احتمال كبير لتذبذب العميل! (الاحتمالية: {churn_proba[0]:.2%})")
+        st.write("يُنصح بالتدخل السريع للاحتفاظ بهذا العميل.")
     else:
-        prediction_result = "Low Risk of Churn"
-        st.success(prediction_result)
+        st.success(f"✅ احتمال منخفض لتذبذب العميل. (الاحتمالية: {churn_proba[0]:.2%})")
+        st.write("يُتوقع أن يبقى العميل.")
 
-    st.write("Based on the most critical factors (Contract Type and Tenure). A full model prediction would be more nuanced.")
+    st.write("---")
+    st.info("ملاحظة: دقة التنبؤ تعتمد على جودة بيانات التدريب ومدى تطابق أعمدة المدخلات مع أعمدة التدريب الأصلية.")
