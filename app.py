@@ -55,9 +55,9 @@ expected_columns = [
 ]
 
 # --- App Title and Description ---
-st.title('👋 Customer Churn Predictor')
+st.title('🚗 توقع تذبذب عملاء تأجير السيارات')
 st.write(
-    "This app predicts whether a customer is likely to churn based on their service usage and contract details. "
+    "يساعد هذا التطبيق شركة تأجير السيارات على التنبؤ بالعملاء المعرضين لخطر التوقف عن التأجير بناءً على سلوكهم وتفاصيل تعاملهم." 
     "Fill in the customer's information below to get a prediction."
 )
 st.write("---")
