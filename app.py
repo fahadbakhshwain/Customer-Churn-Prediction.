@@ -2,16 +2,19 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np # تأكد من وجود numpy
-from sklearn.ensemble import RandomForestClassifier # تأكد من نوع موديلك
+# تأكد من نوع موديلك (RandomForestClassifier أو غيره)
+from sklearn.ensemble import RandomForestClassifier
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Customer Churn Predictor",
-    page_icon="👋",
+    page_title="توقع تذبذب عملاء تأجير السيارات",
+    page_icon="🚗",
     layout="centered"
 )
 
 # --- Load The Model ---
+# هذا الموديل تم تدريبه على بيانات عملاء الاتصالات، وليس تأجير السيارات.
+# التنبؤات ستكون غير دقيقة لهذا السبب.
 try:
     model = joblib.load('models/churn_classifier_model.joblib')
 except FileNotFoundError:
@@ -19,8 +22,8 @@ except FileNotFoundError:
     st.stop()
 
 # --- Define Expected Columns from Training Data ---
-# هذا الجزء حاسم: يجب أن يتضمن جميع الأعمدة بعد pd.get_dummies على بيانات التدريب
-# يجب أن تكون بنفس الترتيب الذي دخلت به إلى الموديل.
+# هذه الأعمدة هي من موديل تدرب على بيانات عملاء الاتصالات.
+# ستحتاج لتحديث هذه القائمة بالكامل عند تدريب موديل جديد على بيانات تأجير السيارات.
 expected_columns = [
     'SeniorCitizen',
     'tenure',
@@ -57,84 +60,89 @@ expected_columns = [
 # --- App Title and Description ---
 st.title('🚗 توقع تذبذب عملاء تأجير السيارات')
 st.write(
-    "يساعد هذا التطبيق شركة تأجير السيارات على التنبؤ بالعملاء المعرضين لخطر التوقف عن التأجير بناءً على سلوكهم وتفاصيل تعاملهم." 
-    "Fill in the customer's information below to get a prediction."
+    "يساعد هذا التطبيق شركة تأجير السيارات على التنبؤ بالعملاء المعرضين لخطر التوقف عن التأجير بناءً على سلوكهم وتفاصيل تعاملهم."
 )
 st.write("---")
 
-# --- User Inputs ---
+# --- User Inputs (مدخلات جديدة لشركة تأجير السيارات) ---
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    tenure = st.number_input('Tenure (in months)', min_value=0, max_value=72, value=1, step=1)
-    contract = st.selectbox('Contract Type', ['Month-to-month', 'One year', 'Two year'])
-    internet_service = st.selectbox('Internet Service', ['DSL', 'Fiber optic', 'No'])
+    st.subheader("معلومات العميل")
+    customer_tenure = st.number_input('مدة التعامل مع الشركة (بالأشهر)', min_value=0, max_value=200, value=12, step=1)
+    avg_rental_duration = st.number_input('متوسط مدة التأجير (بالأيام)', min_value=1, max_value=30, value=3, step=1)
+    num_rentals = st.number_input('عدد مرات التأجير الإجمالي', min_value=0, max_value=100, value=5, step=1)
 
 with col2:
-    monthly_charges = st.slider('Monthly Charges ($)', 18.0, 120.0, 70.0)
-    total_charges = st.number_input('Total Charges ($)', min_value=0.0, value=70.0)
-    tech_support = st.selectbox('Tech Support', ['Yes', 'No', 'No internet service'])
+    st.subheader("تفاصيل التأجير")
+    favorite_car_type = st.selectbox('نوع السيارة المفضل', ['اقتصادي', 'سيدان', 'دفع رباعي', 'فان', 'فاخرة', 'رياضية', 'لم يحدد'])
+    rental_location = st.selectbox('موقع التأجير الرئيسي', ['المطار', 'وسط المدينة', 'فندق', 'محلي', 'آخر'])
+    loyalty_program = st.radio('عضو في برنامج الولاء؟', ['نعم', 'لا'])
 
 with col3:
-    online_security = st.selectbox('Online Security', ['Yes', 'No', 'No internet service'])
-    pmt_method = st.selectbox('Payment Method', ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'])
-    paperless_billing = st.radio('Paperless Billing', ['Yes', 'No'])
+    st.subheader("معلومات أخرى")
+    avg_monthly_spend = st.slider('متوسط الإنفاق الشهري ($)', 50.0, 1000.0, 250.0)
+    last_rental_days_ago = st.number_input('آخر تأجير (منذ كم يوم)', min_value=0, max_value=365, value=30, step=1)
+    # يمكن استبدال "الشكاوى السابقة" بمعلومات أكثر تفصيلاً إذا كانت متوفرة
+    complaints_filed = st.radio('هل لديه شكاوى سابقة؟', ['نعم', 'لا'])
+
 
 # --- Prediction Logic ---
-if st.button('Predict Churn', type="primary"):
-    # بناء قاموس من المدخلات الخام
+if st.button('توقع التذبذب', type="primary"):
+    # بناء قاموس من المدخلات الخام الجديدة
+    # ملاحظة: هذه المدخلات لا تتطابق مع الموديل الحالي.
+    # هذا الجزء يحتاج لتعديل ليتناسب مع الأعمدة بعد get_dummies للموديل الجديد.
     input_data = {
-        'tenure': tenure,
-        'MonthlyCharges': monthly_charges,
-        'TotalCharges': total_charges,
-        'Contract': contract, # تبقى كنص هنا
-        'InternetService': internet_service, # تبقى كنص هنا
-        'OnlineSecurity': online_security, # تبقى كنص هنا
-        'TechSupport': tech_support, # تبقى كنص هنا
-        'PaymentMethod': pmt_method, # تبقى كنص هنا
-        'PaperlessBilling': paperless_billing # تبقى كنص هنا
-        # أضف هنا أي ميزات أخرى استخدمتها في النموذج
-        # تأكد من أن أسماء المفاتيح هنا تتطابق مع أسماء الأعمدة الأصلية في بياناتك
+        'customer_tenure': customer_tenure,
+        'avg_rental_duration': avg_rental_duration,
+        'num_rentals': num_rentals,
+        'favorite_car_type': favorite_car_type,
+        'rental_location': rental_location,
+        'loyalty_program': loyalty_program,
+        'avg_monthly_spend': avg_monthly_spend,
+        'last_rental_days_ago': last_rental_days_ago,
+        'complaints_filed': complaints_filed
     }
 
     # تحويل المدخلات إلى DataFrame
     input_df = pd.DataFrame([input_data])
 
-    # تطبيق get_dummies على بيانات الإدخال
-    # هذا يضمن أن يتم إنشاء نفس الأعمدة التي كانت في بيانات التدريب
+    # تطبيق get_dummies على بيانات الإدخال الجديدة
+    # يجب أن تكون أسماء الأعمدة هنا هي الأسماء الأصلية للميزات الفئوية الجديدة.
     input_df_processed = pd.get_dummies(input_df, columns=[
-        'Contract', 'InternetService', 'OnlineSecurity', 'TechSupport', 'PaymentMethod', 'PaperlessBilling'
-    ], drop_first=True)
+        'favorite_car_type', 'rental_location', 'loyalty_program', 'complaints_filed'
+    ], drop_first=True) # drop_first=True هو الأكثر شيوعاً
 
     # ضمان أن جميع الأعمدة المتوقعة موجودة، وتعيين القيم المفقودة إلى 0
-    # هذا حاسم جداً لـ get_dummies، حيث قد لا تظهر كل الفئات في إدخال واحد
-    # مثال: إذا لم يختار المستخدم 'Fiber optic'، فإن 'InternetService_Fiber optic' لن تنشأ
-    # يجب أن نضمن أنها موجودة في الـ DataFrame بـ 0
-    final_input_df = pd.DataFrame(columns=expected_columns)
+    # هذا حاسم جداً: يجب أن تكون expected_columns هنا هي أعمدة موديل الاتصالات الحالي
+    # لذا، هذا الجزء سيجعل المدخلات الجديدة تتماشى مع أعمدة موديل الاتصالات، مما سيؤدي
+    # إلى تنبؤات غير صحيحة لأن الموديل ليس مدرباً على هذه البيانات.
+    final_input_df = pd.DataFrame(columns=expected_columns) #expected_columns من موديل الاتصالات
     final_input_df = pd.concat([final_input_df, input_df_processed], ignore_index=True)
     final_input_df = final_input_df.fillna(0) # املأ القيم المفقودة بـ 0
     final_input_df = final_input_df.astype(float) # تأكد أن الأعمدة كلها أرقام
 
-    # إعادة ترتيب الأعمدة لتطابق ترتيب أعمدة التدريب بالضبط
-    # (هذه خطوة حاسمة جداً لعمل النموذج بشكل صحيح)
-    # تأكد أن 'expected_columns' (المذكورة في بداية الكود) هي بالترتيب الصحيح.
+    # إعادة ترتيب الأعمدة لتطابق ترتيب أعمدة موديل الاتصالات بالضبط
     final_input_df = final_input_df[expected_columns]
 
-
-    # إجراء التنبؤ باستخدام النموذج المدرب
+    # إجراء التنبؤ باستخدام النموذج المدرب (موديل الاتصالات الحالي)
     churn_prediction = model.predict(final_input_df)
     churn_proba = model.predict_proba(final_input_df)[:, 1] # احتمالية التذبذب
 
     st.write("---")
     st.subheader("نتيجة التنبؤ:")
 
+    # رسالة تحذير واضحة جداً للمستخدم
+    st.warning("⚠️ ملاحظة هامة: هذا التنبؤ غير دقيق! الموديل الحالي تم تدريبه على بيانات عملاء الاتصالات وليس تأجير السيارات. التنبؤات ستكون عشوائية.", icon="⚠️")
+
     if churn_prediction[0] == 1:
         st.error(f"⚠️ احتمال كبير لتذبذب العميل! (الاحتمالية: {churn_proba[0]:.2%})")
-        st.write("يُنصح بالتدخل السريع للاحتفاظ بهذا العميل.")
+        st.write("بناءً على موديل الاتصالات. للحصول على تنبؤات دقيقة، يجب تدريب موديل جديد على بيانات تأجير السيارات.")
     else:
         st.success(f"✅ احتمال منخفض لتذبذب العميل. (الاحتمالية: {churn_proba[0]:.2%})")
-        st.write("يُتوقع أن يبقى العميل.")
+        st.write("بناءً على موديل الاتصالات. للحصول على تنبؤات دقيقة، يجب تدريب موديل جديد على بيانات تأجير السيارات.")
 
     st.write("---")
-    st.info("ملاحظة: دقة التنبؤ تعتمد على جودة بيانات التدريب ومدى تطابق أعمدة المدخلات مع أعمدة التدريب الأصلية.")
+    st.info("الخطوة التالية: تدريب موديل ذكاء اصطناعي جديد على بيانات عملاء تأجير السيارات الحقيقية، وتحديث قائمة الأعمدة المتوقعة (expected_columns) في الكود.")
+
 
